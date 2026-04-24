@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
 const emptyForm = { name: "" };
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const USERS_API_URL = `${API_BASE_URL}/api/users`;
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -15,7 +17,7 @@ function App() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users");
+      const response = await fetch(USERS_API_URL);
       if (!response.ok) {
         throw new Error("Unable to load users");
       }
@@ -49,7 +51,7 @@ function App() {
 
     try {
       const response = await fetch(
-        editingUserId ? `/api/users/${editingUserId}` : "/api/users",
+        editingUserId ? `${USERS_API_URL}/${editingUserId}` : USERS_API_URL,
         {
           method: editingUserId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -86,7 +88,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`${USERS_API_URL}/${id}`, {
         method: "DELETE",
       });
 
