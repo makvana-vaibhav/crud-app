@@ -20,14 +20,16 @@ jobs:
         with:
           node-version: 20
 
-      # 3️⃣ Build frontend
+      # 3️⃣ Build frontend (IMPORTANT: env added)
       - name: Build Frontend
         run: |
           cd frontend
           npm install
           npm run build
+        env:
+          VITE_API_URL: https://api.crud.vaibhavmakvana.in
 
-      # 4️⃣ Copy frontend (keeps nested structure)
+      # 4️⃣ Copy frontend
       - name: Copy frontend to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -37,7 +39,7 @@ jobs:
           source: "frontend/dist"
           target: "/home/ubuntu/frontend-temp"
 
-      # 5️⃣ Deploy everything
+      # 5️⃣ Deploy
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -50,7 +52,7 @@ jobs:
             sudo mv /home/ubuntu/frontend-temp/frontend/dist/* /var/www/crud-app/
             sudo chown -R www-data:www-data /var/www/crud-app
 
-            # cleanup temp folder (important)
+            # cleanup temp
             rm -rf /home/ubuntu/frontend-temp
 
             # --- BACKEND ---
