@@ -25,6 +25,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: password
       DB_NAME: cruddb
+      CORS_ORIGIN: https://crud.vaibhavmakvana.in
     depends_on:
       - postgres
 
