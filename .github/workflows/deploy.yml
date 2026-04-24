@@ -1,0 +1,58 @@
+name: Full Deploy (Frontend + Backend)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup Node
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Build frontend
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      # Copy dist to EC2
+      - name: Copy frontend to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "frontend/dist/*"
+          target: "/home/ubuntu/frontend-temp"
+
+      # SSH and deploy everything
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # --- FRONTEND ---
+            sudo rm -rf /var/www/crud-app/*
+            sudo mv /home/ubuntu/frontend-temp/* /var/www/crud-app/
+            sudo chown -R www-data:www-data /var/www/crud-app
+
+            # --- BACKEND ---
+            cd ~/crud-app
+            git pull origin main
+
+            docker compose down
+            docker compose up -d --build
