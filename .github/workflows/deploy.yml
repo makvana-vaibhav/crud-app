@@ -10,34 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo
+      # 1️⃣ Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Setup Node
+      # 2️⃣ Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Build frontend
+      # 3️⃣ Build frontend
       - name: Build Frontend
         run: |
           cd frontend
           npm install
           npm run build
 
-      # Copy dist to EC2 (flattened)
+      # 4️⃣ Copy frontend (keeps nested structure)
       - name: Copy frontend to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend/dist/**"
+          source: "frontend/dist"
           target: "/home/ubuntu/frontend-temp"
 
-      # Deploy
+      # 5️⃣ Deploy everything
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -47,8 +47,11 @@ jobs:
           script: |
             # --- FRONTEND ---
             sudo rm -rf /var/www/crud-app/*
-            sudo mv /home/ubuntu/frontend-temp/* /var/www/crud-app/
+            sudo mv /home/ubuntu/frontend-temp/frontend/dist/* /var/www/crud-app/
             sudo chown -R www-data:www-data /var/www/crud-app
+
+            # cleanup temp folder (important)
+            rm -rf /home/ubuntu/frontend-temp
 
             # --- BACKEND ---
             cd ~/crud-app
